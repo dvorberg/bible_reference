@@ -27,13 +27,12 @@
 
 """
 I’m writing my own datafile format here. That may seem like
-overfill, but for special purposes special solutions make sense.
+overkill, but for special purposes special solutions make sense.
 
 It’s a simplified CSV format, using the semicolon “;” as delimeter,
-which may be quoted using \. (Use Python’s csv module if you want more
-sophisticated structures). A “#” and everything after it is considered
-a comment. “#”, too, may be quoted using a \. Empty lines are
-ignored. Column values are stripped of whitespace left and
+which may be quoted using \. A “#” and everything after it is
+considered a comment. “#”, too, may be quoted using a \. Empty lines
+are ignored. Column values are stripped of whitespace left and
 right. Encoding is UTF-8.
 
 There are two subspecies: A regular or “list” datafile is just what
@@ -41,11 +40,9 @@ one’d expect. In a “dict” datafile, the first line must start with a
 “+” and contains the column headers/dict keys. There are two classes
 for these two files. The presence/absence “+” is verifed by either
 class. If you want a regular list with a “+” as the first sign of the
-first value, er…, well, you can’t. Just as “#”, that’s just not what
-is is for.
+first value, er…, well, you can’t. 
 
-The classes are read-only. There are utility functions to write
-infofiles from lists/dicts respectively.
+The objects are read-only containers.
 """
 import string, types, re
 
@@ -60,14 +57,14 @@ class ParseError(Exception):
         return "%s:%i %s" % ( self.filename, self.lineno, self.message, )
 
 # Hardcoding the UTF-8 charset for this file-format.
-# There’s a bunch of things I decided in my Steve Jobs-like omnipotence. 
+# Like this, I decided a bunch of things in my Steve Jobs-like omnipotence. 
 py_unicode = unicode
 def unicode(s):
     return py_unicode(s, "utf-8")
 
 class EmptyRow(Exception):
     """
-    Raised by parse_row() if “line” is empty (or only a comment)
+    Raised by parse_row() if “line” is empty (or only a comment).
     """
     pass
 
@@ -105,7 +102,7 @@ class Infofile:
             filepath = filepath_or_fp
         else:
             fp = filepath_or_fp
-            filepath = "<file object>"
+            filepath = repr(filepath_or_fp)
             
         with open(filepath) as fp:
             self._rows = []
