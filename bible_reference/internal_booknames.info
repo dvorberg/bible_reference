@@ -1,0 +1,91 @@
+# The BiblicalBook class uses an internal name to id every book. So I
+# had to choose one naming scheme. The .canon files use this as a
+# reference. The second column is only a comment. When Bible
+# references are sorted, the book-part is sorted by the position the
+# internal name has in this file.
+
+Gn  ; Genesis
+Ex  ; Exodus
+Lv  ; Leviticus
+Nb  ; Numbers
+Dt  ; Deuteronomy
+
+Jos ; Joshua
+Jg  ; Judges (Richter)
+Rt  ; Rut(h)
+
+1S  ; Samuel
+2S  ; Samuel
+1K  ; Kings (Könige)
+2K  ; Kings (Könige)
+1Ch ; Chronicles
+2Ch ; Chronicles
+Ezr ; Ezra
+Neh ; Nehemia
+Tb  ; Tobit
+Jdt ; Judith
+Est ; Esther
+
+1M  ; Maccabees
+2M  ; Maccabees
+3M  ; Maccabees
+
+Jb  ; Job (Ijob/Hiob)
+Ps  ; Psalms
+Pr  ; Proverbs (Sprichwörter)
+Ec  ; Ecclesiastes (Kohelet)
+Sg  ; Song of Songs (Hohelied)
+Ws  ; Wisdom (Weisheit)
+Si  ; Ecclesiasticus (Jesus Sirach)
+
+Is  ; Isaiah
+Jr  ; Jeremiah
+Lm  ; Lamentations (Klagelieder)
+Ba  ; Baruch
+Ez  ; Ezekiel
+Dn  ; Daniel
+
+# Zwölfprophetenbuch
+Ho  ; Hosea
+Jl  ; Joel
+Am  ; Amos
+Ob  ; Obadiah
+Jon ; Jonah
+Mi  ; Micha
+Na  ; Nahum
+Hab ; Habakkuk
+Zp  ; Zephanja
+Hg  ; Haggai
+Zc  ; Zechiariah
+Ml  ; Malachi
+
+# NT
+Mt  ; Matthew
+Mk  ; Mark
+Lk  ; Luke
+Jn  ; John
+Ac  ; Acts (Apg)
+Rm  ; Romans (Römer)
+1Cor; Corinthians
+2Cor; Corinthians
+Gal ; Galatians
+Eph ; Ephesians
+Ph  ; Philippians
+Col ; Colossians
+1Th ; Thessalonians
+2Th ; Thessalonians
+1Tm ; Timothy
+2Tm ; Timothy
+Tt  ; Titus
+Phm ; Philemon
+Heb ; Hebrews
+
+Jm  ; James (Jakobus)
+1P  ; Peter
+2P  ; Peter
+1Jn ; 1. Johannes
+2Jn ; 2. Johannes
+3Jn ; 3. Johannes
+Jude; Jude (Judas)
+
+Rv  ; Revelation (Offb)
