@@ -80,18 +80,25 @@ class BiblicalBook:
         return (self.intid == other.intid)
 
 class NamingScheme:
-    def __init__(self, name, ordinal_delimiter="."):
+    """
+    Return an intid for a Biblical book and provide unified
+    human-readable representations.
+    """
+    def __init__(self, name, ordinal_delimiter=".", verse_delimiter=","):
         """
         @name: The name of this naming scheme
         @ordinal_delimiter: If the book has an ordinal in its name
             (1Cor, 2. Macc), specify which unicode characters should go
             between the number and the name.
+        @verse_delimiter: Unicode characters but between chapter and verse
+            in a reference, as in “John 2<verse_delimiter>12”.
         """
         self.name = name
         self.name_by_intid = dict(Infofile(here(name, ".names")))
         self._intid_by_name = None # See intid_by_name() below!
         self.ordinal_delimiter = ordinal_delimiter
-
+        self.verse_delimiter = verse_delimiter
+        
     @property
     def intid_by_name(self):
         """
@@ -162,7 +169,7 @@ _bible_reference_re_tmpl = ur"""
     (?:                                   # Alles nach dem Kapitel ist optional.
       (?:[,:]\(?(?P<v_start>\d+)[-–](?P<c_end>\d+),(?P<v_end>\d+)\)?)   # Röm 3,1-3,3
       |(?:[,:]\(?(?P<verse_range>\d+)[-–](?P<verse_range_end>\d+)\?)> # Röm 3,1-3
-      |(?:[,:]\(?(?P<verse>\d+)f0,2}\)?)                             # Röm 3,1
+      |(?:[,:]\(?(?P<verse>\d+)f{0,2}\)?)                            # Röm 3,1
       |(?:[-–](?P<chapter_range>\d+)f{0,2})                          # Röm 1-3
     )?                                    # …„nach dem Kapitel“-Gruppe
     \)?
@@ -177,9 +184,8 @@ def bible_reference_re(naming_schemes = [default_naming_scheme,]):
     """
     Return a regular expression object matching Bible references that
     use names from any of the naming schemes. Ordinals will not be
-    checked (“9.Cor” will match) and nor key plausibility. In other
-    words: If the naming schemes are ambiguous, you have to figure
-    that out by yourseld.
+    checked (“9.Cor” will match) nor key plausibility (meaning,
+    ambigious naming schemes will yield undefined results).
     """
     names = set()
     for ns in naming_schemes:
@@ -196,21 +202,22 @@ def bible_reference_re(naming_schemes = [default_naming_scheme,]):
 class BibleReference:
     """
     Represent a bible reference for sorting and representation.
-
-    “Chapter” and “verse” are integers (or none) for sorting, “range”
-    is used for representation. Naming schemes can be provided for
-    long names (“names”) and abbreviations (“abbrs”).
-        
-    @book: BiblicalBook instance
-    @chapter: (something that parses to an) integer or None
-    @verse: (something that parses to an) integer or None
-    @range: String, a human-readable representation of the
-       chapters/verses referenced. May be ''.
     """
     whitespace_re = re.compile(r"\s+", re.UNICODE)
     
-    def __init__(self, book, chapter, verse, range,
-                 names=default_naming_scheme):
+    def __init__(self, book, chapter, verse, range="",
+                 naming_scheme=default_naming_scheme):
+        """
+        “Chapter” and “verse” are integers (or none) for sorting, “range”
+        is used for representation. Naming schemes can be provided for
+        long names (“names”) and abbreviations (“abbrs”).
+        
+        @book: BiblicalBook instance
+        @chapter: (something that parses to an) integer or None
+        @verse: (something that parses to an) integer or None
+        @range: String, a human-readable representation of the
+        chapters/verses referenced. May be ''.
+        """
         assert isinstance(book, BiblicalBook), TypeError
         self.book = book
         
@@ -229,9 +236,8 @@ class BibleReference:
             range = self.whitespace_re.sub(" ", range)
             range = range.lower()
             
-        self.range = range
-
-        self.names = names
+        self._range = range
+        self.naming_scheme = naming_scheme
         
     @classmethod
     def parse(BibleReference, s, naming_schemes=[]):
@@ -249,11 +255,17 @@ class BibleReference:
             raise BibleReferenceParseError(s)
         else:
             d = match.groupdict()
+            for key, value in d.items():
+                if value is not None:
+                    print key, "=", value
             ret = BibleReference._from_match(match, naming_schemes)
             return ret
 
     @classmethod
     def finditer(BibleReference, s, naming_schemes=[]):
+        """
+        Search through `s` for Bible references using `naming_schemes`.
+        """
         if type(s) != types.UnicodeType:
             s = unicode(s)
 
@@ -285,12 +297,26 @@ class BibleReference:
         
         return BibleReference(book, chapter, verse, groups[u"range"],
                               naming_schemes[0])
-        
+
+    @property
+    def range(self):
+        if self._range:
+            return self._range
+        else:
+            if self.chapter and self.verse:
+                return "%i%s%i" % ( self.chapter,
+                                    self.naming_scheme.verse_delimiter,
+                                    self.verse, )
+            elif self.chapter:
+                return str(self.chapter)
+            else:
+                return ""
+            
     def __str__(self):
         """
         The default string representation
         """
-        return self.represent_using(self.names)
+        return self.represent_using(self.naming_scheme)
 
     def __repr__(self):
         return "<%s %s:%s '%s'>" % ( self.book.intid, self.chapter, self.verse,
@@ -318,3 +344,5 @@ class BibleReference:
         return ( self.book == other.book and \
                  self.range == other.range )
     
+
+ 
