@@ -3,7 +3,7 @@
 
 ##  This file is part of the t4 Python module collection. 
 ##
-##  Copyright 2018 by Diedrich Vorberg <diedrich@tux4web.de>
+##  Copyright 2018–19 by Diedrich Vorberg <diedrich@tux4web.de>
 ##
 ##  All Rights Reserved
 ##
@@ -36,6 +36,20 @@ def here(filename, extension):
     else:
         return op.join(op.dirname(__file__), filename + extension)
 
+reference_int_re = re.compile(r"(\d+)[abcdf]?")
+def reference_int(s):
+    """
+    Accept input that has “f” or ”a“, ”b“… attached to a number.
+    """
+    match = reference_int_re.match(s)
+    if match is None:
+        raise ValueError(
+            "invalid literal for reference_int() with base 10: '%s'" % s)
+    else:
+        q, = match.groups()
+        return int(q)
+    
+    
 class Canon:
     """
     A canon is the representation of an order of Biblical Books loaded
@@ -165,16 +179,16 @@ _bible_reference_re_tmpl = ur"""
   (?P<range>
     (?P<parsable_range>
     \(?
-    (?P<chapter>[0-9]+)                         # Kapitel
+    (?P<chapter>[0-9]+)                   # Kapitel
     (?:                                   # Alles nach dem Kapitel ist optional.
-      (?:[,:]\(?(?P<v_start>\d+)[-–](?P<c_end>\d+),(?P<v_end>\d+)\)?)   # Röm 3,1-3,3
-      |(?:[,:]\(?(?P<verse_range>\d+)[-–](?P<verse_range_end>\d+)\?)> # Röm 3,1-3
-      |(?:[,:]\(?(?P<verse>\d+)f{0,2}\)?)                            # Röm 3,1
-      |(?:[-–](?P<chapter_range>\d+)f{0,2})                          # Röm 1-3
+      (?:[,:]\(?(?P<v_start>\d+[ab]?)[-–](?P<c_end>\d+[ab]?),(?P<v_end>\d+[ab]?)\)?)   # Röm 3,1-3,3
+      |(?:[,:]\(?(?P<verse_range>\d+[ab]?)[-–](?P<verse_range_end>\d+[ab]?)) # Röm 3,1-3
+      |(?:[,:]\(?(?P<verse>\d+[ab]?)f{0,2}\)?)                            # Röm 3,1
+      |(?:[-–](?P<chapter_range>\d+[ab]?)f{0,2})                          # Röm 1-3
     )?                                    # …„nach dem Kapitel“-Gruppe
     \)?
     ) # parsable_range
-    (?P<more>\s*[;\.\(\d\+][-–;\s\d\.\(\)f]*[\d\)])?
+    (?P<more>\s*[;\.\(\d\+][-–;\s\dab\.\(\)f]*[\dab\)])?
     \)?
   )
 )
@@ -222,11 +236,11 @@ class BibleReference:
         self.book = book
         
         if chapter is not None:
-            chapter = int(chapter)            
+            chapter = reference_int(chapter)            
         self.chapter = chapter
 
-        if verse is not None:
-            verse = int(verse)
+        if verse is not None:            
+            verse = reference_int(verse)
         self.verse = verse
 
         if range:
@@ -255,9 +269,6 @@ class BibleReference:
             raise BibleReferenceParseError(s)
         else:
             d = match.groupdict()
-            for key, value in d.items():
-                if value is not None:
-                    print key, "=", value
             ret = BibleReference._from_match(match, naming_schemes)
             return ret
 
@@ -278,12 +289,16 @@ class BibleReference:
     def _from_match(BibleReference, match, naming_schemes):
         groups = match.groupdict()
 
+        book = None
         for ns in naming_schemes:
             try:
                 book = ns.book_named(groups[u"ordinal"], groups[u"book"])
                 break
             except KeyError:
                 pass
+
+        if book is None:
+            raise KeyError("Unknown book: %(ordinal)s %(book)s" % groups)
 
         chapter = groups[u"chapter"]
             
