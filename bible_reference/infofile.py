@@ -3,7 +3,7 @@
 
 ##  This file is part of the t4 Python module collection. 
 ##
-##  Copyright 2018 by Diedrich Vorberg <diedrich@tux4web.de>
+##  Copyright 2018–19 by Diedrich Vorberg <diedrich@tux4web.de>
 ##
 ##  All Rights Reserved
 ##
@@ -36,7 +36,7 @@ are ignored. Column values are stripped of whitespace left and
 right. Encoding is UTF-8.
 
 There are two subspecies: A regular or “list” datafile is just what
-one’d expect. In a “dict” datafile, the first line must start with a
+one would expect. In a “dict” datafile, the first line must start with a
 “+” and contains the column headers/dict keys. There are two classes
 for these two files. The presence/absence “+” is verifed by either
 class. If you want a regular list with a “+” as the first sign of the
@@ -44,7 +44,10 @@ first value, er…, well, you can’t.
 
 The objects are read-only containers.
 """
-import string, types, re
+from __future__ import print_function, unicode_literals
+import re, io
+
+__infofile_encoding__ = "utf-8"
 
 class ParseError(Exception):
     def __init__(self, filename, lineno, line, message):
@@ -55,12 +58,6 @@ class ParseError(Exception):
 
     def __str__(self):
         return "%s:%i %s" % ( self.filename, self.lineno, self.message, )
-
-# Hardcoding the UTF-8 charset for this file-format.
-# Like this, I decided a bunch of things in my Steve Jobs-like omnipotence. 
-py_unicode = unicode
-def unicode(s):
-    return py_unicode(s, "utf-8")
 
 class EmptyRow(Exception):
     """
@@ -73,7 +70,8 @@ backslash_re = re.compile(r"\\(?=[#;])")
 def parse_row(line):
     parts = delimiter_re.split(line)
     parts = map(lambda s: backslash_re.sub("", s), parts)
-    parts = map(string.strip, parts)
+    parts = map(lambda s: s.strip(), parts)
+    parts = tuple(parts)
     
     if (not parts) or (parts[0] == "" and (
             len(parts) == 1 or parts[1] == "#")):
@@ -81,9 +79,9 @@ def parse_row(line):
         
     parts = iter(parts)
     while True:
-        yield parts.next()
+        yield next(parts)
         try:
-            delimiter = parts.next()
+            delimiter = next(parts)
         except StopIteration:
             break
         else:
@@ -97,73 +95,68 @@ class Infofile:
     implement a read-only interface to a list of tuples.
     """    
     def __init__(self, filepath_or_fp):
-        if type(filepath_or_fp) in (types.StringType, types.UnicodeType):
-            fp = open(filepath_or_fp)
-            filepath = filepath_or_fp
-        else:
+        if isinstance(filepath_or_fp, io.IOBase):
             fp = filepath_or_fp
             filepath = repr(filepath_or_fp)
-            
-        with open(filepath) as fp:
-            self._rows = []
-            colcount = None
-            
-            for idx, line_s in enumerate(fp.readlines()):
-                line = unicode(line_s)
-                try:
-                    row = tuple(parse_row(line))
-                except EmptyRow:
-                    pass
-                else:                    
-                    if colcount is not None and len(row) != colcount:
-                        raise ParseError(
-                            filepath, idx+1, line_s,
-                            "Mismatched number of columns %i instead of %i" % (
-                                len(row), colcount))
-                    else:
-                        colcount = len(row)
+        else:
+            fp = io.open(filepath_or_fp, encoding=__infofile_encoding__)
+            filepath = filepath_or_fp
+                        
+        self._rows = []
+        colcount = None
 
-                    self._rows.append(row)
+        for idx, line in enumerate(fp.readlines()):
+            try:
+                row = tuple(parse_row(line))
+            except EmptyRow:
+                pass
+            else:                    
+                if colcount is not None and len(row) != colcount:
+                    raise ParseError(
+                        filepath, idx+1, line,
+                        "Mismatched number of columns %i instead of %i" % (
+                            len(row), colcount))
+                else:
+                    colcount = len(row)
+
+                self._rows.append(row)
                 
-        self.__len__ = self._rows.__len__
-        self.__getitem__ = self._rows.__getitem__
-        self.__iter__ = self._rows.__iter__
-        self.__reversed__ = self._rows.__reversed__
-        self.__contains__ = self._rows.__contains__
+        fp.close()
+                
+    def __len__(self): return self._rows.__len__()
+    def __getitem__(self, idx): return self._rows.__getitem__(idx)
+    def __reversed__ (self): return self._rows.__reversed__()    
+    def __contains__(self): return self._rows.__contains__()        
+    def __iter__(self): return self._rows.__iter__()
 
-
-
-
-class dict_infofile:
+class DictInfofile:
     """
     Read an infofile that represents a read-only list of dicts, with
     the first row providing dict keys. The first entry in the first
     row must have a “+” as first character, which will be discarded.
     """
     def __init__(self, filepath_or_fp):
-        inff = infofile(filepath_or_fp)
-        if inff[0][0][0] != "+":
-            raise IOError("Not a dict info file. (There is no +).")
-        keys = inff[0]
-        keys[0] = keys[0][1:] # Remove the +
+        if isinstance(filepath_or_fp, io.IOBase):
+            fp = filepath_or_fp
+            filepath = repr(filepath_or_fp)
+        else:
+            fp = io.open(filepath_or_fp, encoding=__infofile_encoding__)
+            filepath = filepath_or_fp
 
-        self._enrtries = []
-        for tpl in inff[1:]:
+        plus = fp.read(1)
+        if plus != "+":
+            raise IOError("Not a dict info file. (There is no +).")
+            
+        inif = iter(Infofile(fp))
+
+        keys = next(inif)
+        self._entries = []
+        for tpl in inif:
             self._entries.append(dict(zip(keys, tpl)))
         
-        self.__len__ = self._entries.__len__
-        self.__getitem__ = self._entries.__getitem__
-        self.__iter__ = self._entries.__iter__
-        self.__reversed__ = self._entries.__reversed__
-        self.__contains__ = self._entries.__contains__
+    def __len__(self): return self._entries.__len__()
+    def __getitem__(self, idx): return self._entries.__getitem__(idx)
+    def __reversed__ (self): return self._entries.__reversed__()    
+    def __contains__(self): return self._entries.__contains__()        
+    def __iter__(self): return self._entries.__iter__()
 
-        
-if __name__ == "__main__":
-    print tuple(parse_row("Eins;Zwei;Dies \; ist ein Semikolon und \n dies \# ein Nummernkreuz # Ich bin der Kommentar #\n"))
-    #print tuple(parse_row("\n"))
-    #print tuple(parse_row("# I’m just a comment!\n"))
-    print tuple(parse_row(";empty first col\n"))
-    print tuple(parse_row(";\n"))
-    
-    # i = Infofile("default.canon")
-    # print list(i)
