@@ -70,4 +70,4 @@ br = BibleReference.parse("Joh 3,16", [ Luther84_abbr, RGG, ])
 '''
 
 For represenration, the first naming scheme passed to the constructor
-is used.
+is used by default.
