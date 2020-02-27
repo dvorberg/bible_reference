@@ -34,6 +34,6 @@ supplied, but the most detailed representation is for my native tongue
 German.
 """
 
-from bible_reference import here, Canon, NamingScheme, BiblicalBook, \
+from .bible_reference import here, Canon, NamingScheme, BiblicalBook, \
     BibleReference
 
