@@ -158,12 +158,12 @@ class dict_infofile:
         self.__contains__ = self._entries.__contains__
 
         
-if __name__ == "__main__":
-    print tuple(parse_row("Eins;Zwei;Dies \; ist ein Semikolon und \n dies \# ein Nummernkreuz # Ich bin der Kommentar #\n"))
-    #print tuple(parse_row("\n"))
-    #print tuple(parse_row("# I’m just a comment!\n"))
-    print tuple(parse_row(";empty first col\n"))
-    print tuple(parse_row(";\n"))
+# if __name__ == "__main__":
+#     print(tuple(parse_row("Eins;Zwei;Dies \; ist ein Semikolon und \n dies \# ein Nummernkreuz # Ich bin der Kommentar #\n")))
+#     #print tuple(parse_row("\n"))
+#     #print tuple(parse_row("# I’m just a comment!\n"))
+#     print(tuple(parse_row(";empty first col\n")))
+#     print(tuple(parse_row(";\n")))
     
-    # i = Infofile("default.canon")
-    # print list(i)
+#     # i = Infofile("default.canon")
+#     # print list(i)
