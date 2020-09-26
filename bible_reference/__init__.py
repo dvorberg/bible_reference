@@ -33,5 +33,6 @@ German.
 """
 
 from .bible_reference import here, Canon, NamingScheme, BiblicalBook, \
-    BibleReference
+    BibleReference, BibleReferenceParser, \
+    CanonMismatch, BibleReferenceParseError
 
