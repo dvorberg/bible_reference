@@ -29,8 +29,28 @@ Convenience module.
 
 from .bible_reference import NamingScheme
 
-RGG = NamingScheme.internal("RGG")
-RGG_abbr = NamingScheme.internal("RGG_abbr")
-RGG_lang = NamingScheme.internal("RGG_lang")
-Luther84 = NamingScheme.internal("Luther84")
-Luther84_abbr = NamingScheme.internal("Luther84_abbr")
+class LazyNamingScheme:
+    """
+    THe naming-schemes are there, but they are only loaded from their
+    info file, if needed.
+    """
+    def __init__(self, name, ordinal_delimiter=".", verse_delimiter=","):
+        self._lazy = ( name, ordinal_delimiter, verse_delimiter, )
+        self.naming_scheme = None
+    
+    def __getattr__(self, name):
+        if self.naming_scheme is None:
+            n, ordinal, verse = self._lazy
+            self.naming_scheme = NamingScheme.internal(n, ordinal, verse)
+            
+        return getattr(self.naming_scheme, name)
+    
+RGG = LazyNamingScheme("RGG")
+RGG_abbr = LazyNamingScheme("RGG_abbr")
+RGG_lang = LazyNamingScheme("RGG_lang")
+
+Luther84 = LazyNamingScheme("Luther84")
+Luther84_abbr = LazyNamingScheme("Luther84_abbr")
+
+SBL = LazyNamingScheme("SBL", " ", ":")
+SBL_abbr = LazyNamingScheme("SBL_abbr", " ", ":")
