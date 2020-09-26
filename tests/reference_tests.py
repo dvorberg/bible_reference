@@ -28,7 +28,8 @@
 from __future__ import print_function, unicode_literals
 import unittest
 from bible_reference.bible_reference import (default_canon, BiblicalBook,
-                                             NamingScheme, BibleReference)
+                                             NamingScheme, BibleReference,
+                                             default_canon)
 
 class InfoFileTests(unittest.TestCase):
     def test_canon(self):
@@ -63,8 +64,8 @@ class InfoFileTests(unittest.TestCase):
         self.assertEqual(ns.intid_of("1", "Kor"), "1Cor")
         self.assertEqual(ns.intid_of(None, "Röm"), "Rm")
 
-        self.assertEqual(ns.book_named(None, "Gen"), genesis)
-        self.assertEqual(ns.book_named(None, "Röm"), romans)
+        self.assertEqual(ns.book_named(None, "Gen", default_canon), genesis)
+        self.assertEqual(ns.book_named(None, "Röm", default_canon), romans)
 
         self.assertEqual(ns.names(default_canon),
                          ("Gen", "Ex", "Lev", "Num", "Dtn", "Jos", "Ri",
@@ -77,8 +78,8 @@ class InfoFileTests(unittest.TestCase):
                           "Hag", "Sach", "Mal", "Mt", "Mk", "Lk", "Joh",
                           "Apg", "Röm", "1Kor", "2Kor", "Gal", "Eph", "Phil",
                           "Kol", "1Thess", "2Thess", "1Tim", "2Tim", "Tit",
-                          "Phil", "Heb", "Jak", "1Petr", "2Petr",
-                          "1Joh", "2Joh", "3Joh", "Jud", "Apk"))
+                          "Phil",  "1Petr", "2Petr", "1Joh", "2Joh", "3Joh",
+                          "Heb", "Jak", "Jud", "Apk"))
 
     def test_reference(self):
         genesis = BiblicalBook("Gn")
@@ -96,7 +97,8 @@ class InfoFileTests(unittest.TestCase):
         self.assertEqual(BibleReference.parse("Joh 1,14"), word_becomes_flesh)
         self.assertEqual(BibleReference.parse("Röm 3,22"), faith_alone)
 
-        
+        self.assertEqual(BibleReference.parse("Gen 1,1").int_sort_index(),
+                         1 << 16 | 1 << 8 | 1)
                                             
         
 if __name__ == '__main__':
