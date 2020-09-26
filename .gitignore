@@ -1,3 +1,5 @@
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -106,4 +108,5 @@ venv.bak/
 .mypy_cache/
 virtualenv
 
-.DS_Store
+.DS_Storebuild dist
+bible_reference.egg-info/
