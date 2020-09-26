@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="bible_reference", # Replace with your own username
-    version="1.0",
+    version="1.1",
     author="Diedrich Vorberg",
     author_email="diedrich@tux4web.de",
     description="This module implements classes that I have developed to parse and output Bible references.",
