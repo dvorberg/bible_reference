@@ -30,9 +30,6 @@ Convenience module.
 from .bible_reference import Canon, default_canon
 
 default = default_canon
-"""
-Luther (1984) `./default.canon`.
-"""
 
 king_hames = Canon("KingJames")
 """
