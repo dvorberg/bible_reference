@@ -1,0 +1,80 @@
+# from bible_reference.infofile import Infofile
+# i = Infofile("bible_reference/bible_reference/SBL_both.info")
+# for intid, short, long in i:
+#    print(intid + ";", short)
+
+Gn; Gen
+Ex; Exod
+Lv; Lev
+Nb; Num
+Dt; Deut
+Jos; Josh
+Jg; Judg
+Rt; Ruth
+1S; 1 Sam
+2S; 2 Sam
+1K; 1 Kgs
+2K; 2 Kgs
+1Ch; 1 Chr
+2Ch; 2 Chr
+Ezr; Ezra
+Neh; Neh
+Est; Esth
+Jb; Job
+Ps; Ps
+Pr; Prov
+Ec; Eccl
+Sg; Song
+Is; Isa
+Jr; Jer
+Lm; Lam
+Ez; Ezek
+Dn; Dan
+Ho; Hos
+Jl; Joel
+Am; Amos
+Ob; Obad
+Jon; Jonah
+Mi; Mic
+Na; Nah
+Hab; Hab
+Hp; Zeph
+Hg; Hag
+Zc; Zech
+Ml; Mal
+Mt; Matt
+Mk; Mark
+Lk; Luke
+Jn; John
+Ac; Acts
+Rm; Rom
+1Cor; 1 Cor
+2Cor; 2 Cor
+Gal; Gal
+Eph; Eph
+Ph; Phil
+Col; Col
+1Th; 1 Thess
+2Th; 2 Thess
+1Tm; 1 Tim
+2Tm; 2 Tim
+Tt; Titus
+Phm; Phlm
+Heb; Heb
+Jm; Jas
+1P; 1 Pet
+2P; 2 Pet
+1Jn; 1 John
+2Jn; 2 John
+3Jn; 3 John
+Jude; Jude
+Rv; Rev
+Tb; Tob
+Jdt; Jdt
+Ws; Wis
+Si; Sir
+Ba; Bar
+1M; 1 Macc
+2M; 2 Macc
+3M; 3 Macc
+4M; 4 Macc
