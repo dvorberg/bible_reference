@@ -240,8 +240,7 @@ class NamingScheme:
         return tuple([tpl[1] for tpl in ret])
         
 
-from .naming_schemes import RGG_abbr    
-default_naming_scheme = RGG_abbr
+default_naming_scheme = NamingScheme.internal("default")
 def set_default_naming_scheme(naming_scheme):
     global default_naming_scheme
     default_naming_scheme = naming_scheme
@@ -402,9 +401,11 @@ class BibleReference:
         groups = match.groupdict()
 
         book = None
+        found_in_naming_scheme = naming_schemes[0]
         for ns in naming_schemes:
             try:
                 book = ns.book_named(groups["ordinal"], groups["book"], canon)
+                found_in_naming_scheme = ns
                 break
             except KeyError:
                 pass
@@ -421,9 +422,14 @@ class BibleReference:
             verse = groups["verse_range"]
         elif groups["v_start"] is not None:
             verse = groups["v_start"]
-        
-        return BibleReference(book, chapter, verse, groups["range"],
-                              naming_schemes[0])
+
+        # Internally, we use “,” as a verse delimiter.
+        if groups["range"]:
+            range = groups["range"].replace(":", ",")
+        else:
+            range = None
+            
+        return BibleReference(book, chapter, verse, range, naming_schemes[0])
 
     @property
     def range(self):
@@ -431,9 +437,7 @@ class BibleReference:
             return self._range
         else:
             if self.chapter and self.verse:
-                return "%i%s%i" % ( self.chapter,
-                                    self.naming_scheme.verse_delimiter,
-                                    self.verse, )
+                return "%i,%i" % ( self.chapter, self.verse, )
             elif self.chapter:
                 return "%i" % self.chapter
             else:
@@ -441,6 +445,8 @@ class BibleReference:
 
     @range.setter
     def range(self, range):
+        # Internally, we use “,” as a verse delimiter.
+        range = range.replace(";", ",") 
         self._range = range
             
     def __str__(self):
@@ -454,9 +460,11 @@ class BibleReference:
                                      self.range, )
     
     def represent_using(self, naming_scheme):
-        if (self.range):
-            return "%s %s" % ( naming_scheme.name_for(self.book),
-                               self.range, )
+        if self.range:
+            range = self.range
+            if naming_scheme.verse_delimiter != ",":
+                range = range.replace(",", naming_scheme.verse_delimiter)
+            return "%s %s" % ( naming_scheme.name_for(self.book), range, )
         else:
             return naming_scheme.name_for(self.book)
 
