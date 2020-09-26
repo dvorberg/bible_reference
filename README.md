@@ -56,18 +56,18 @@ may vary, for it has not been tested extensively.**
 
 Here is where it all comes together. An instance is created using
 
-'''
+```python
 br = BibleReference(BiblicalBook("Jn"), 3, 16)
-'''
+```
 
 or
 
-'''
+```python
 from bible_reference import BibleReference
 from bible_reference.naming_schemes import RGG, Luther84_abbr
 
 br = BibleReference.parse("Joh 3,16", [ Luther84_abbr, RGG, ])
-'''
+```
 
 For represenration, the first naming scheme passed to the constructor
 is used by default.
