@@ -1,5 +1,5 @@
 # bible_reference
-Parse, sort and pretty-print Bible references
+Parse, sort and pretty-print Bible references.
 
 This module implements classes that I have developed to parse and
 output Bible references. With some 3,000 years of literary history,
@@ -71,3 +71,8 @@ br = BibleReference.parse("Joh 3,16", [ Luther84_abbr, RGG, ])
 
 For represenration, the first naming scheme passed to the constructor
 is used by default.
+
+
+There is a directory postgresql/ containing example code on how to use
+this for sorting biblical references in the a relational database in
+canonical order. See [postgresql/README.md](postgresql/README.md)
