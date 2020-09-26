@@ -48,6 +48,9 @@ import re, io
 __infofile_encoding__ = "utf-8"
 
 class ParseError(Exception):
+    """
+    Raised when an error is found in an info file.
+    """
     def __init__(self, filename, lineno, line, message):
         self.filename = filename
         self.lineno = lineno
@@ -63,11 +66,11 @@ class EmptyRow(Exception):
     """
     pass
 
-delimiter_re = re.compile(r"(?<!\\)([#;])")
-backslash_re = re.compile(r"\\(?=[#;])")
+_delimiter_re = re.compile(r"(?<!\\)([#;])")
+_backslash_re = re.compile(r"\\(?=[#;])")
 def parse_row(line):
-    parts = delimiter_re.split(line)
-    parts = [backslash_re.sub("", s) for s in parts]
+    parts = _delimiter_re.split(line)
+    parts = [_backslash_re.sub("", s) for s in parts]
     parts = [s.strip() for s in parts]
     parts = tuple(parts)
     
@@ -93,6 +96,8 @@ class Infofile:
     implement a read-only interface to a list of tuples.
     """    
     def __init__(self, filepath_or_fp):
+        """
+        """
         if isinstance(filepath_or_fp, io.IOBase):
             fp = filepath_or_fp
             filepath = repr(filepath_or_fp)
@@ -134,6 +139,8 @@ class DictInfofile:
     row must have a “+” as first character, which will be discarded.
     """
     def __init__(self, filepath_or_fp):
+        """
+        """
         if isinstance(filepath_or_fp, io.IOBase):
             fp = filepath_or_fp
             filepath = repr(filepath_or_fp)
