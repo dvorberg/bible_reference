@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; -*-
 
-
 ##  Copyright 2018–20 by Diedrich Vorberg <diedrich@tux4web.de>
 ##
 ##  All Rights Reserved
@@ -24,9 +23,27 @@
 ##
 ##  I have added a copy of the GPL in the file COPYING
 
+"""
+Convenience module.
+"""
+
 from .bible_reference import Canon, default_canon
 
 default = default_canon
+"""
+This is the default canon used by King James Version (my 1973 Holman
+Edition), Luther (1984), Einheitsübersetzung (1980); cf. `./default.canon`.
+"""
+
 BHS = Canon("BHS")
+"""
+The masorete canon as used in the Biblia Hebraica Stuttgartensia,
+5. Auflage 1997, Stuttgart 1969/77; cf. `./BHS.canon`.
+"""
+
 LXX = Canon("LXX")
+"""
+Septuaginta. Edidit Alfred Rahlfs. Editio Quinta. Stuttgart, 1935;
+cf. `./LXX.canon`.
+"""
 

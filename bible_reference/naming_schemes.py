@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; -*-
 
-
 ##  Copyright 2018–20 by Diedrich Vorberg <diedrich@tux4web.de>
 ##
 ##  All Rights Reserved
@@ -24,10 +23,14 @@
 ##
 ##  I have added a copy of the GPL in the file COPYING
 
+"""
+Convenience module.
+"""
+
 from .bible_reference import NamingScheme
 
-RGG = NamingScheme("RGG")
-RGG_abbr = NamingScheme("RGG_abbr")
-RGG_lang = NamingScheme("RGG_lang")
-Luther84 = NamingScheme("Luther84")
-Luther84_abbr = NamingScheme("Luther84_abbr")
+RGG = NamingScheme.internal("RGG")
+RGG_abbr = NamingScheme.internal("RGG_abbr")
+RGG_lang = NamingScheme.internal("RGG_lang")
+Luther84 = NamingScheme.internal("Luther84")
+Luther84_abbr = NamingScheme.internal("Luther84_abbr")
