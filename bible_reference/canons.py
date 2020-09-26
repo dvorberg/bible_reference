@@ -31,8 +31,12 @@ from .bible_reference import Canon, default_canon
 
 default = default_canon
 """
-This is the default canon used by King James Version (my 1973 Holman
-Edition), Luther (1984), Einheitsübersetzung (1980); cf. `./default.canon`.
+Luther (1984) `./default.canon`.
+"""
+
+king_hames = Canon("KingJames")
+"""
+This is the canon used by King James Version (my 1973 Holman Edition)
 """
 
 BHS = Canon("BHS")
