@@ -1,5 +1,6 @@
 from bible_reference import BibleReferenceParser
-from bible_reference.naming_schemes import RGG_abbr, Luther84, Luther84_abbr
+from bible_reference.naming_schemes import RGG_abbr, Luther84, Luther84_abbr, \
+    SBL_abbr
 
 # Creating the BibleReferenceParser here will keep all the data in memory,
 # organized and (the regular expressions) parsed. These are expensive
@@ -12,3 +13,6 @@ parser = BibleReferenceParser(
 def parse_bibref(reference):
     return parser.parse(reference)
     
+def anglicize_bibref(reference):
+    br = parser.parse(reference)
+    return br.represent_using(SBL_abbr)
