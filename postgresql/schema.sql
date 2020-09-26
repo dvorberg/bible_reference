@@ -14,3 +14,10 @@ AS $$
     from my_bibref_module import parse_bibref
     return parse_bibref(reference).int_sort_index()
 $$ LANGUAGE plpython;
+
+CREATE OR REPLACE FUNCTION anglicize_bibref (reference text)
+  RETURNS text
+AS $$
+    from my_bibref_module import anglicize_bibref
+    return anglicize_bibref(reference)
+$$ LANGUAGE plpython;
