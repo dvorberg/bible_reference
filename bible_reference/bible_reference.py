@@ -29,7 +29,7 @@ schemes and the class that binds it all together: BibleReference.
 """
 
 from __future__ import print_function, unicode_literals
-import re, os.path as op, collections, numbers
+import re, os.path as op, collections, numbers, functools
 
 from .infofile import Infofile
 
@@ -88,6 +88,8 @@ class Canon:
 default_canon = Canon("default")
 
 ordinal_re = re.compile(r"([0-9])?[\.\s]*(.*)", re.UNICODE)
+
+@functools.total_ordering
 class BiblicalBook:
     """
     Implement comparison (that is: sorting) of biblical books by canon
@@ -100,12 +102,7 @@ class BiblicalBook:
         match = ordinal_re.match(intid)
         ordinal, name = match.groups()
         self.has_ordinal = bool(ordinal)
-
-    def __cmp__(self, other):
-        assert other.canon == self.canon, CanonMismatch
-        return cmp(self.canon.index[self.intid],
-                   self.canon.index[other.intid])
-
+        
     def __eq__(self, other):
         return (self.intid == other.intid)
 
@@ -223,7 +220,7 @@ class NamingScheme:
             
         return self.intid_by_name[(ordinal, name.capitalize(),)]
 
-    def book_named(self, ordinal, name, canon=default_canon):
+    def book_named(self, ordinal, name, canon):
         """
         Return a BiblicalBook object for the info provided.
         """
@@ -243,7 +240,8 @@ class NamingScheme:
         return tuple([tpl[1] for tpl in ret])
         
 
-default_naming_scheme = NamingScheme.internal("RGG_abbr")
+from .naming_schemes import RGG_abbr    
+default_naming_scheme = RGG_abbr
 def set_default_naming_scheme(naming_scheme):
     global default_naming_scheme
     default_naming_scheme = naming_scheme
@@ -291,6 +289,44 @@ def bible_reference_re(naming_schemes=None):
     return re.compile(_bible_reference_re_tmpl % names, re.VERBOSE)
 
 
+class BibleReferenceParser:
+    """
+    To parse of find bible references from strings, an elaborate
+    regular expression is constructed. For efficiency, this may be
+    stored as a parser object.
+    """
+    def __init__(self, naming_schemes=None, canon=default_canon):
+        if naming_schemes is None:
+            self.naming_schemes = [ default_naming_scheme, ]
+        else:
+            self.naming_schemes = naming_schemes
+
+        self.canon = canon
+            
+        self.regex = bible_reference_re(self.naming_schemes)
+
+    def parse(self, s):
+        """
+        Parse s into a BibleReference object. May raise ParseError.
+        """
+        match = self.regex.match(s)
+        if match is None:
+            raise BibleReferenceParseError(s)
+        else:
+            return BibleReference._from_match(
+                match, self.naming_schemes, self.canon)
+
+    def finditer(self, s):
+        """
+        Iterate over all bible references that can be found in s.
+        """
+        for match in self.regex.finditer(s):
+            yield BibleReference._from_match(
+                match, self.naming_schemes, self.canon)
+
+
+
+@functools.total_ordering
 class BibleReference:
     """
     Represent a bible reference for sorting and representation.
@@ -331,9 +367,9 @@ class BibleReference:
             
         self._range = range
         self.naming_scheme = naming_scheme or default_naming_scheme
-        
+
     @classmethod
-    def parse(BibleReference, s, naming_schemes=None):
+    def parse(BibleReference, s, naming_schemes=None, canon=default_canon):
         """
         Parse the bible reference in s using naming_schemes. The first
         naming scheme is used to construct the BibleReference
@@ -341,43 +377,34 @@ class BibleReference:
         
         @param naming_schemes: Defaults to
             bible_reference.default_naming_scheme.
+        @param canon: The canon that will be associated with the bible
+            references returned. Defaults to the default canon.
         """
-        if naming_schemes is None:
-            naming_schemes = [ default_naming_scheme, ]
-            
-        regex = bible_reference_re(naming_schemes)
-        match = regex.match(s)
-        if match is None:
-            raise BibleReferenceParseError(s)
-        else:
-            d = match.groupdict()
-            ret = BibleReference._from_match(match, naming_schemes)
-            return ret
-
+        parser = BibleReferenceParser(naming_schemes, canon)
+        return parser.parse(s)
+    
     @classmethod
-    def finditer(BibleReference, s, naming_schemes=None):
+    def finditer(BibleReference, s, naming_schemes=None, canon=default_canon):
         """
         Search through `s` for Bible references using `naming_schemes`.
         
         @param naming_schemes: Defaults to
             bible_reference.default_naming_scheme.
+        @param canon: The canon that will be associated with the bible
+            references returned. Defaults to the default canon.
         """
-        if naming_schemes is None:
-            naming_schemes = [ default_naming_scheme, ]
-            
-        regex = bible_reference_re(naming_schemes)
-
-        for match in regex.finditer(s):
-            yield BibleReference._from_match(match, naming_schemes)
+        parser = BibleReferenceParser(naming_schemes, canon)
+        for br in parser.finditer(s):
+            yield br
 
     @classmethod
-    def _from_match(BibleReference, match, naming_schemes):
+    def _from_match(BibleReference, match, naming_schemes, canon):
         groups = match.groupdict()
 
         book = None
         for ns in naming_schemes:
             try:
-                book = ns.book_named(groups["ordinal"], groups["book"])
+                book = ns.book_named(groups["ordinal"], groups["book"], canon)
                 break
             except KeyError:
                 pass
@@ -411,6 +438,10 @@ class BibleReference:
                 return "%i" % self.chapter
             else:
                 return ""
+
+    @range.setter
+    def range(self, range):
+        self._range = range
             
     def __str__(self):
         """
@@ -429,13 +460,14 @@ class BibleReference:
         else:
             return naming_scheme.name_for(self.book)
 
-    def __cmp__(self, other):
+    def __lt__(self, other):
         """
         For sorting.
         This might raise CanonMismatch from BiblicalBook.__cmp__().
         """
-        return cmp( (self.book, self.chapter, self.verse,),
-                    (other.book, other.chapter, other.verse,) )
+        return (self.book, self.chapter, self.verse,) < (other.book,
+                                                         other.chapter,
+                                                         other.verse,)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -443,6 +475,18 @@ class BibleReference:
         
         return ( self.book == other.book and \
                  self.range == other.range )
-    
 
- 
+
+    def int_sort_index(self):
+        """
+        Return an integer uniqly identifying this biblical reference for
+        sorting. 24 bits will be used to represent
+        - 8bit index of book in canon
+        - 8bis chapter number
+        - 8bits verse number
+        """
+        b = self.book.canon.index[self.book.intid] + 1
+        c = self.chapter or 0
+        v = self.verse or 0
+
+        return b << 16 | c << 8 | v;
