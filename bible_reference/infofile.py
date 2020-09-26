@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; -*-
 
-##  This file is part of the t4 Python module collection. 
-##
-##  Copyright 2018–19 by Diedrich Vorberg <diedrich@tux4web.de>
+##  Copyright 2018–20 by Diedrich Vorberg <diedrich@tux4web.de>
 ##
 ##  All Rights Reserved
 ##
@@ -69,8 +67,8 @@ delimiter_re = re.compile(r"(?<!\\)([#;])")
 backslash_re = re.compile(r"\\(?=[#;])")
 def parse_row(line):
     parts = delimiter_re.split(line)
-    parts = map(lambda s: backslash_re.sub("", s), parts)
-    parts = map(lambda s: s.strip(), parts)
+    parts = [backslash_re.sub("", s) for s in parts]
+    parts = [s.strip() for s in parts]
     parts = tuple(parts)
     
     if (not parts) or (parts[0] == "" and (

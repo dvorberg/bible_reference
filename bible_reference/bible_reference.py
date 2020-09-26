@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; -*-
 
-##  This file is part of the t4 Python module collection. 
-##
-##  Copyright 2018–19 by Diedrich Vorberg <diedrich@tux4web.de>
+
+##  Copyright 2018–20 by Diedrich Vorberg <diedrich@tux4web.de>
 ##
 ##  All Rights Reserved
 ##
@@ -26,7 +25,7 @@
 ##  I have added a copy of the GPL in the file COPYING
 
 from __future__ import print_function, unicode_literals
-import re, os.path as op
+import re, os.path as op, collections, numbers
 
 from .infofile import Infofile
 from .exceptions import CanonMismatch, BibleReferenceParseError
@@ -42,13 +41,16 @@ def reference_int(s):
     """
     Accept input that has “f” or ”a“, ”b“… attached to a number.
     """
-    match = reference_int_re.match(s)
-    if match is None:
-        raise ValueError(
-            "invalid literal for reference_int() with base 10: '%s'" % s)
+    if isinstance(s, numbers.Number):
+        return int(s)
     else:
-        q, = match.groups()
-        return int(q)
+        match = reference_int_re.match(s)
+        if match is None:
+            raise ValueError(
+                "invalid literal for reference_int() with base 10: '%s'" % s)
+        else:
+            q, = match.groups()
+            return int(q)
     
     
 class Canon:
@@ -58,10 +60,10 @@ class Canon:
     """
     def __init__(self, name):
         self.name = name
-        self.book_ids = tuple(map(lambda tpl: tpl[0],
-                                  Infofile(here(name, ".canon"))))
-        self.index = dict(map(lambda tpl: (tpl[1], tpl[0],),
-                              enumerate(self.book_ids)))
+        self.book_ids = tuple(
+            [tpl[0] for tpl in Infofile(here(name, ".canon"))])
+        self.index = dict(
+            [(tpl[1], tpl[0],) for tpl in enumerate(self.book_ids)])
 
     def __iter__(self):
         """
@@ -107,21 +109,66 @@ class NamingScheme:
     Return an intid for a Biblical book and provide unified
     human-readable representations.
     """
-    def __init__(self, name, ordinal_delimiter=".", verse_delimiter=","):
+    def __init__(self, name_by_intid, name=None,
+                 ordinal_delimiter=".", verse_delimiter=","):
         """
-        @name: The name of this naming scheme
+        @name_by_intid: Dict matching internal ids to book names.
+        @name: The name of this naming scheme; defaults to internal id.
+        @ordinal_delimiter: If the book has an ordinal in its name
+            (1Cor, 2. Macc), specify which unicode characters should go
+            between the number and the name.
+        @verse_delimiter: Characer(s) put between chapter and verse
+            in a reference, as in “John 2<verse_delimiter>12”.
+        """
+        if not name:
+            self.name = "<%s %i>" % ( self.__class__.__name__, id(self), )
+        else:            
+            self.name = name
+
+        if not isinstance(name_by_intid, collections.Mapping):
+            raise TypeError("name_by_intid must be Mapping type")
+        else:
+            self.name_by_intid = name_by_intid
+        
+        self.ordinal_delimiter = ordinal_delimiter
+        self.verse_delimiter = verse_delimiter
+
+        self._intid_by_name = None
+
+    @classmethod
+    def internal(cls, name, ordinal_delimiter=".", verse_delimiter=","):
+        """
+        @name: The name of this naming scheme matching .names file
+            distributed in this directory.
         @ordinal_delimiter: If the book has an ordinal in its name
             (1Cor, 2. Macc), specify which unicode characters should go
             between the number and the name.
         @verse_delimiter: Unicode characters but between chapter and verse
             in a reference, as in “John 2<verse_delimiter>12”.
         """
-        self.name = name
-        self.name_by_intid = dict(Infofile(here(name, ".names")))
-        self._intid_by_name = None # See intid_by_name() below!
-        self.ordinal_delimiter = ordinal_delimiter
-        self.verse_delimiter = verse_delimiter
-        
+        return cls.from_infofile(here(name, ".names"), name,
+                                 ordinal_delimiter, verse_delimiter)
+
+    @classmethod
+    def from_infofile(cls, filepath, name=None,
+                      ordinal_delimiter=".", verse_delimiter=","):
+        """
+        @filepath: Path to .info file, formatted like the .names files
+            from this project.
+        @name: The name of this naming scheme . 
+        @ordinal_delimiter: If the book has an ordinal in its name
+            (1Cor, 2. Macc), specify which unicode characters should go
+            between the number and the name.
+        @verse_delimiter: Unicode characters but between chapter and verse
+            in a reference, as in “John 2<verse_delimiter>12”.
+        """
+        if name is None:
+            fname = op.basename(filepath)
+            name, ext = op.splitext(fname)
+
+        return cls(dict(Infofile(filepath)), name,
+                   ordinal_delimiter, verse_delimiter)
+    
     @property
     def intid_by_name(self):
         """
@@ -139,7 +186,8 @@ class NamingScheme:
             return (ordinal, name.capitalize()), intid,
         
         if self._intid_by_name is None:
-            self._intid_by_name = dict(map(item, self.name_by_intid.items()))
+            self._intid_by_name = dict(
+                [item(tpl) for tpl in self.name_by_intid.items()])
 
         return self._intid_by_name
         
@@ -179,12 +227,13 @@ class NamingScheme:
         if canon is not None:
             ret = sorted(ret, key=lambda tpl: canon.index[tpl[0]])
         
-        return tuple(map(lambda tpl: tpl[1], ret))
+        return tuple([tpl[1] for tpl in ret])
         
 
-# In the future the defaul twill be English, I think.
-default_naming_scheme = NamingScheme("RGG_abbr")
-
+default_naming_scheme = NamingScheme.internal("RGG_abbr")
+def set_default_naming_scheme(naming_scheme):
+    global default_naming_scheme
+    default_naming_scheme = naming_scheme
 
 _bible_reference_re_tmpl = r"""
 (?P<reference>
@@ -209,23 +258,24 @@ _bible_reference_re_tmpl = r"""
 )
 """
 
-def bible_reference_re(naming_schemes = [default_naming_scheme,]):
+def bible_reference_re(naming_schemes=None):
     """
     Return a regular expression object matching Bible references that
     use names from any of the naming schemes. Ordinals will not be
     checked (“9.Cor” will match) nor key plausibility (meaning,
     ambigious naming schemes will yield undefined results).
     """
+    if naming_schemes is None:
+        naming_schemes = [ default_naming_scheme, ]
+    
     names = set()
     for ns in naming_schemes:
-        pairs = map(lambda name: ordinal_re.match(name).groups(),
-                    ns.names())
-        without_ordinals = map(lambda ordinal_name: ordinal_name[1], pairs)
+        pairs = [ordinal_re.match(name).groups() for name in ns.names()]
+        without_ordinals = [ordinal_name[1] for ordinal_name in pairs]
         names = names.union(set(without_ordinals))
 
     names = "|".join(names)
-    return re.compile(_bible_reference_re_tmpl % names,
-                      re.VERBOSE | re.UNICODE)
+    return re.compile(_bible_reference_re_tmpl % names, re.VERBOSE)
 
 
 class BibleReference:
@@ -234,8 +284,7 @@ class BibleReference:
     """
     whitespace_re = re.compile(r"\s+", re.UNICODE)
     
-    def __init__(self, book, chapter, verse, range="",
-                 naming_scheme=default_naming_scheme):
+    def __init__(self, book, chapter, verse, range="", naming_scheme=None):
         """
         “Chapter” and “verse” are integers (or none) for sorting, “range”
         is used for representation. Naming schemes can be provided for
@@ -246,6 +295,8 @@ class BibleReference:
         @verse: (something that parses to an) integer or None
         @range: String, a human-readable representation of the
            chapters/verses referenced. May be ''.
+        @naming_scheme: Used for representation. Defaults to
+           bible_reference.default_naming_scheme.
         """
         assert isinstance(book, BiblicalBook), TypeError
         self.book = book
@@ -266,15 +317,21 @@ class BibleReference:
             range = range.lower()
             
         self._range = range
-        self.naming_scheme = naming_scheme
+        self.naming_scheme = naming_scheme or default_naming_scheme
         
     @classmethod
-    def parse(BibleReference, s, naming_schemes=[default_naming_scheme,]):
+    def parse(BibleReference, s, naming_schemes=None):
         """
-        Parse the bible reference in (unicode) string s using
-        naming_schemes. The first naming scheme is used to construct
-        the BibleReference returned.
+        Parse the bible reference in s using naming_schemes. The first
+        naming scheme is used to construct the BibleReference
+        returned.
+        
+        @param naming_schemes: Defaults to
+            bible_reference.default_naming_scheme.
         """
+        if naming_schemes is None:
+            naming_schemes = [ default_naming_scheme, ]
+            
         regex = bible_reference_re(naming_schemes)
         match = regex.match(s)
         if match is None:
@@ -285,10 +342,16 @@ class BibleReference:
             return ret
 
     @classmethod
-    def finditer(BibleReference, s, naming_schemes=[]):
+    def finditer(BibleReference, s, naming_schemes=None):
         """
         Search through `s` for Bible references using `naming_schemes`.
+        
+        @param naming_schemes: Defaults to
+            bible_reference.default_naming_scheme.
         """
+        if naming_schemes is None:
+            naming_schemes = [ default_naming_scheme, ]
+            
         regex = bible_reference_re(naming_schemes)
 
         for match in regex.finditer(s):

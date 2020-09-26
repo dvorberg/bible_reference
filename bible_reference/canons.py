@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; -*-
 
-##  This file is part of the t4 Python module collection. 
-##
-##  Copyright 2018 by Diedrich Vorberg <diedrich@tux4web.de>
+
+##  Copyright 2018–20 by Diedrich Vorberg <diedrich@tux4web.de>
 ##
 ##  All Rights Reserved
 ##
@@ -25,7 +24,7 @@
 ##
 ##  I have added a copy of the GPL in the file COPYING
 
-from bible_reference import Canon, default_canon
+from .bible_reference import Canon, default_canon
 
 default = default_canon
 BHS = Canon("BHS")

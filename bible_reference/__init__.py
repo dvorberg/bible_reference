@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; -*-
 
-##  This file is part of the t4 Python module collection. 
-##
-##  Copyright 2018 by Diedrich Vorberg <diedrich@tux4web.de>
+##  Copyright 2018–20 by Diedrich Vorberg <diedrich@tux4web.de>
 ##
 ##  All Rights Reserved
 ##

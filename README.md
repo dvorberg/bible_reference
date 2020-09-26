@@ -2,7 +2,7 @@
 Parse, sort and pretty-print Bible references
 
 This module implements classes that I have developed to parse and
-output Bible references. With some 3,000 years of literary history
+output Bible references. With some 3,000 years of literary history,
 that’s not as simple a task as one might think, especially when
 dealing with several languages. Rudimentary datafiles for English are
 supplied, but the most detailed representation is for my native 

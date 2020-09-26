@@ -1,4 +1,30 @@
+#!/usr/bin/env python
 # -*- coding: utf-8; -*-
+
+##  This file is part of the t4 Python module collection. 
+##
+##  Copyright 2018–20 by Diedrich Vorberg <diedrich@tux4web.de>
+##
+##  All Rights Reserved
+##
+##  For more Information on orm see the README file.
+##
+##  This program is free software; you can redistribute it and/or modify
+##  it under the terms of the GNU General Public License as published by
+##  the Free Software Foundation; either version 2 of the License, or
+##  (at your option) any later version.
+##
+##  This program is distributed in the hope that it will be useful,
+##  but WITHOUT ANY WARRANTY; without even the implied warranty of
+##  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##  GNU General Public License for more details.
+##
+##  You should have received a copy of the GNU General Public License
+##  along with this program; if not, write to the Free Software
+##  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+##
+##  I have added a copy of the GPL in the file COPYING
+
 from __future__ import print_function, unicode_literals
 import unittest
 from bible_reference.bible_reference import (default_canon, BiblicalBook,
@@ -22,7 +48,7 @@ class InfoFileTests(unittest.TestCase):
         self.assertTrue(exodus < romans)
 
     def test_naming_scheme(self):
-        ns = NamingScheme("RGG_abbr")
+        ns = NamingScheme.internal("RGG_abbr")
         genesis = BiblicalBook("Gn")
         romans = BiblicalBook("Rm")
 
@@ -50,8 +76,8 @@ class InfoFileTests(unittest.TestCase):
                           "Am", "Ob", "Jon", "Mi", "Nah", "Hab", "Zeph",
                           "Hag", "Sach", "Mal", "Mt", "Mk", "Lk", "Joh",
                           "Apg", "Röm", "1Kor", "2Kor", "Gal", "Eph", "Phil",
-                          "Kos", "1Thess", "2Thess", "1Tim", "2Tim", "Tit",
-                          "Phil", "Kol", "Jak", "1Petr", "2Petr",
+                          "Kol", "1Thess", "2Thess", "1Tim", "2Tim", "Tit",
+                          "Phil", "Heb", "Jak", "1Petr", "2Petr",
                           "1Joh", "2Joh", "3Joh", "Jud", "Apk"))
 
     def test_reference(self):
