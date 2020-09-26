@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; -*-
 
-
 ##  Copyright 2018–20 by Diedrich Vorberg <diedrich@tux4web.de>
 ##
 ##  All Rights Reserved
@@ -24,11 +23,25 @@
 ##
 ##  I have added a copy of the GPL in the file COPYING
 
+"""
+Main module containing classes Canons, biblical Books, naming
+schemes and the class that binds it all together: BibleReference.
+"""
+
 from __future__ import print_function, unicode_literals
 import re, os.path as op, collections, numbers
 
 from .infofile import Infofile
-from .exceptions import CanonMismatch, BibleReferenceParseError
+
+class CanonMismatch(Exception):
+    """
+    Raised, if biblical books sorted, that are not in the same canon.
+    """
+
+class BibleReferenceParseError(Exception):
+    """
+    Bible Reference Parse Error
+    """
 
 def here(filename, extension):
     if ("/") in filename:
