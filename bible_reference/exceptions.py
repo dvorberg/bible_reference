@@ -24,11 +24,4 @@
 ##
 ##  I have added a copy of the GPL in the file COPYING
 
-class CanonMismatch(Exception):
-    """
-    Raised, if biblical books sorted, that are not in the same canon.
-    """
-
-class BibleReferenceParseError(Exception):
-    pass
 
