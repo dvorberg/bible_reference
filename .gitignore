@@ -110,3 +110,5 @@ virtualenv
 
 .DS_Storebuild dist
 bible_reference.egg-info/
+
+site-packages
