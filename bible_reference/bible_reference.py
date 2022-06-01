@@ -29,7 +29,7 @@ schemes and the class that binds it all together: BibleReference.
 """
 
 from __future__ import print_function, unicode_literals
-import re, os.path as op, collections, numbers, functools
+import re, os.path as op, collections.abc, numbers, functools
 
 from .infofile import Infofile
 
@@ -135,7 +135,7 @@ class NamingScheme:
         else:            
             self.name = name
 
-        if not isinstance(name_by_intid, collections.Mapping):
+        if not isinstance(name_by_intid, collections.abc.Mapping):
             raise TypeError("name_by_intid must be Mapping type")
         else:
             self.name_by_intid = name_by_intid
