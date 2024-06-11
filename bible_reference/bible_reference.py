@@ -414,7 +414,8 @@ class BibleReference:
                 pass
 
         if book is None:
-            raise KeyError("Unknown book: %(ordinal)s %(book)s" % groups)
+            raise BibleReferenceParseError(
+                "Unknown book: %(ordinal)s %(book)s" % groups)
 
         chapter = groups["chapter"]
 
