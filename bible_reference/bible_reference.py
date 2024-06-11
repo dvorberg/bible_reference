@@ -64,8 +64,8 @@ def reference_int(s):
         else:
             q, = match.groups()
             return int(q)
-    
-    
+
+
 class Canon:
     """
     A canon is the representation of an order of Biblical Books loaded
@@ -102,7 +102,7 @@ class BiblicalBook:
         match = ordinal_re.match(intid)
         ordinal, name = match.groups()
         self.has_ordinal = bool(ordinal)
-        
+
     def __eq__(self, other):
         return (self.intid == other.intid)
 
@@ -132,14 +132,14 @@ class NamingScheme:
         """
         if not name:
             self.name = "<%s %i>" % ( self.__class__.__name__, id(self), )
-        else:            
+        else:
             self.name = name
 
         if not isinstance(name_by_intid, collections.abc.Mapping):
             raise TypeError("name_by_intid must be Mapping type")
         else:
             self.name_by_intid = name_by_intid
-        
+
         self.ordinal_delimiter = ordinal_delimiter
         self.verse_delimiter = verse_delimiter
 
@@ -165,7 +165,7 @@ class NamingScheme:
         """
         @filepath: Path to .info file, formatted like the .names files
             from this project.
-        @name: The name of this naming scheme . 
+        @name: The name of this naming scheme .
         @ordinal_delimiter: If the book has an ordinal in its name
             (1Cor, 2. Macc), specify which unicode characters should go
             between the number and the name.
@@ -178,7 +178,7 @@ class NamingScheme:
 
         return cls(dict(Infofile(filepath)), name,
                    ordinal_delimiter, verse_delimiter)
-    
+
     @property
     def intid_by_name(self):
         """
@@ -194,13 +194,13 @@ class NamingScheme:
             intid, name = tpl
             ordinal, name = ordinal_re.match(name).groups()
             return (ordinal, name.capitalize()), intid,
-        
+
         if self._intid_by_name is None:
             self._intid_by_name = dict(
                 [item(tpl) for tpl in self.name_by_intid.items()])
 
         return self._intid_by_name
-        
+
     def name_for(self, biblical_book):
         """
         Return the pretty name for a BiblicalBook object.
@@ -217,7 +217,7 @@ class NamingScheme:
     def intid_of(self, ordinal, name):
         if not ordinal:
             ordinal = None
-            
+
         return self.intid_by_name[(ordinal, name.capitalize(),)]
 
     def book_named(self, ordinal, name, canon):
@@ -233,12 +233,12 @@ class NamingScheme:
         """
         ret = self.name_by_intid.items()
 
-        # ret is a list of tuples as ( intid, name, )        
+        # ret is a list of tuples as ( intid, name, )
         if canon is not None:
             ret = sorted(ret, key=lambda tpl: canon.index[tpl[0]])
-        
+
         return tuple([tpl[1] for tpl in ret])
-        
+
 
 default_naming_scheme = NamingScheme.internal("default")
 def set_default_naming_scheme(naming_scheme):
@@ -248,8 +248,11 @@ def set_default_naming_scheme(naming_scheme):
 _bible_reference_re_tmpl = r"""
 (?P<reference>
   (?:(?:(?P<ordinal>\d)[\.\s]?\s*)?(?P<book>%s))
-                                        # Buch (das wird aus der DB gebaut!!)
+                                          # Buch (das wird aus der DB gebaut!!)
   \s*
+  (?P<moreStart>\([^\)]+\)[,;]\s*)?       # Eine Kapitel- oder Versangabe
+                                          # in Klammern *vor* der eigentlichen
+                                          # Bibelstelle zählt nicht fürs Parsen.
   (?P<range>
     (?P<parsable_range>
     \(?
@@ -262,7 +265,7 @@ _bible_reference_re_tmpl = r"""
     )?                                    # …„nach dem Kapitel“-Gruppe
     \)?
     ) # parsable_range
-    (?P<more>\s*[;\.\(\d\+][-–;\s\dab\.\(\)f]*[\dab\)])?
+    (?P<moreEnd>\s*[;\.\(\d\+][-–;\s\dab\.\(\)f]*[\dab\)])?
     \)?
   )
 )
@@ -277,7 +280,7 @@ def bible_reference_re(naming_schemes=None):
     """
     if naming_schemes is None:
         naming_schemes = [ default_naming_scheme, ]
-    
+
     names = set()
     for ns in naming_schemes:
         pairs = [ordinal_re.match(name).groups() for name in ns.names()]
@@ -301,7 +304,7 @@ class BibleReferenceParser:
             self.naming_schemes = naming_schemes
 
         self.canon = canon
-            
+
         self.regex = bible_reference_re(self.naming_schemes)
 
     def parse(self, s):
@@ -331,13 +334,13 @@ class BibleReference:
     Represent a bible reference for sorting and representation.
     """
     whitespace_re = re.compile(r"\s+", re.UNICODE)
-    
+
     def __init__(self, book, chapter, verse, range="", naming_scheme=None):
         """
         “Chapter” and “verse” are integers (or none) for sorting, “range”
         is used for representation. Naming schemes can be provided for
         long names (“names”) and abbreviations (“abbrs”).
-        
+
         @book: BiblicalBook instance
         @chapter: (something that parses to an) integer or None
         @verse: (something that parses to an) integer or None
@@ -348,12 +351,12 @@ class BibleReference:
         """
         assert isinstance(book, BiblicalBook), TypeError
         self.book = book
-        
+
         if chapter is not None:
-            chapter = reference_int(chapter)            
+            chapter = reference_int(chapter)
         self.chapter = chapter
 
-        if verse is not None:            
+        if verse is not None:
             verse = reference_int(verse)
         self.verse = verse
 
@@ -363,7 +366,7 @@ class BibleReference:
             range = range.replace("-", "–")
             range = self.whitespace_re.sub(" ", range)
             range = range.lower()
-            
+
         self._range = range
         self.naming_scheme = naming_scheme or default_naming_scheme
 
@@ -373,7 +376,7 @@ class BibleReference:
         Parse the bible reference in s using naming_schemes. The first
         naming scheme is used to construct the BibleReference
         returned.
-        
+
         @param naming_schemes: Defaults to
             bible_reference.default_naming_scheme.
         @param canon: The canon that will be associated with the bible
@@ -381,12 +384,12 @@ class BibleReference:
         """
         parser = BibleReferenceParser(naming_schemes, canon)
         return parser.parse(s)
-    
+
     @classmethod
     def finditer(BibleReference, s, naming_schemes=None, canon=default_canon):
         """
         Search through `s` for Bible references using `naming_schemes`.
-        
+
         @param naming_schemes: Defaults to
             bible_reference.default_naming_scheme.
         @param canon: The canon that will be associated with the bible
@@ -414,7 +417,7 @@ class BibleReference:
             raise KeyError("Unknown book: %(ordinal)s %(book)s" % groups)
 
         chapter = groups["chapter"]
-            
+
         verse = None
         if groups["verse"] is not None:
             verse = groups["verse"]
@@ -427,8 +430,13 @@ class BibleReference:
         if groups["range"]:
             range = groups["range"].replace(":", ",")
         else:
-            range = None
-            
+            range = ""
+
+        if groups["moreStart"]:
+            range = groups["moreStart"] + range
+        if groups["moreEnd"]:
+            range += groups["moreEnd"]
+
         return BibleReference(book, chapter, verse, range, naming_schemes[0])
 
     @property
@@ -446,9 +454,9 @@ class BibleReference:
     @range.setter
     def range(self, range):
         # Internally, we use “,” as a verse delimiter.
-        range = range.replace(";", ",") 
+        range = range.replace(";", ",")
         self._range = range
-            
+
     def __str__(self):
         """
         The default string representation
@@ -458,7 +466,7 @@ class BibleReference:
     def __repr__(self):
         return "<%s %s:%s '%s'>" % ( self.book.intid, self.chapter, self.verse,
                                      self.range, )
-    
+
     def represent_using(self, naming_scheme):
         if self.range:
             range = self.range
@@ -480,7 +488,7 @@ class BibleReference:
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        
+
         return ( self.book == other.book and \
                  self.range == other.range )
 
