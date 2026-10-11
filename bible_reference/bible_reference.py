@@ -248,8 +248,11 @@ def set_default_naming_scheme(naming_scheme):
 _bible_reference_re_tmpl = r"""
 (?P<reference>
   (?:(?:(?P<ordinal>\d)[\.\s]?\s*)?(?P<book>%s))
-                                        # Buch (das wird aus der DB gebaut!!)
+                                          # Buch (das wird aus der DB gebaut!!)
   \s*
+  (?P<moreStart>\([^\)]+\)[,;]\s*)?       # Eine Kapitel- oder Versangabe
+                                          # in Klammern *vor* der eigentlichen
+                                          # Bibelstelle zählt nicht fürs Parsen.
   (?P<range>
     (?P<parsable_range>
     \(?
@@ -262,7 +265,7 @@ _bible_reference_re_tmpl = r"""
     )?                                    # …„nach dem Kapitel“-Gruppe
     \)?
     ) # parsable_range
-    (?P<more>\s*[;\.\(\d\+][-–;\s\dab\.\(\)f]*[\dab\)])?
+    (?P<moreEnd>\s*[;\.\(\d\+][-–;\s\dab\.\(\)f]*[\dab\)])?
     \)?
   )
 )
@@ -428,7 +431,12 @@ class BibleReference:
         if groups["range"]:
             range = groups["range"].replace(":", ",")
         else:
-            range = None
+            range = ""
+
+        if groups["moreStart"]:
+            range = groups["moreStart"] + range
+        if groups["moreEnd"]:
+            range += groups["moreEnd"]
 
         return BibleReference(book, chapter, verse, range, naming_schemes[0])
 
