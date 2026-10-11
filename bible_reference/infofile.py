@@ -23,12 +23,12 @@
 ##
 ##  I have added a copy of the GPL in the file COPYING
 
-"""
+r"""
 I’m writing my own datafile format here. That may seem like
 overkill, but for special purposes special solutions make sense.
 
 It’s a simplified CSV format, using the semicolon “;” as delimeter,
-which may be quoted using \. A “#” and everything after it is
+hich may be quoted using \. A “#” and everything after it is
 considered a comment. “#”, too, may be quoted using a \. Empty lines
 are ignored. Column values are stripped of whitespace left and
 right. Encoding is UTF-8.
@@ -38,7 +38,7 @@ one would expect. In a “dict” datafile, the first line must start with a
 “+” and contains the column headers/dict keys. There are two classes
 for these two files. The presence/absence “+” is verifed by either
 class. If you want a regular list with a “+” as the first sign of the
-first value, er…, well, you can’t. 
+first value, er…, well, you can’t.
 
 The objects are read-only containers.
 """
@@ -73,11 +73,11 @@ def parse_row(line):
     parts = [_backslash_re.sub("", s) for s in parts]
     parts = [s.strip() for s in parts]
     parts = tuple(parts)
-    
+
     if (not parts) or (parts[0] == "" and (
             len(parts) == 1 or parts[1] == "#")):
         raise EmptyRow()
-        
+
     parts = iter(parts)
     while True:
         yield next(parts)
@@ -89,12 +89,12 @@ def parse_row(line):
             if delimiter == "#":
                 break
 
-            
+
 class Infofile:
     """
     Read a regular infofile with the format specified above and
     implement a read-only interface to a list of tuples.
-    """    
+    """
     def __init__(self, filepath_or_fp):
         """
         """
@@ -104,7 +104,7 @@ class Infofile:
         else:
             fp = io.open(filepath_or_fp, encoding=__infofile_encoding__)
             filepath = filepath_or_fp
-                        
+
         self._rows = []
         colcount = None
 
@@ -113,7 +113,7 @@ class Infofile:
                 row = tuple(parse_row(line))
             except EmptyRow:
                 pass
-            else:                    
+            else:
                 if colcount is not None and len(row) != colcount:
                     raise ParseError(
                         filepath, idx+1, line,
@@ -123,13 +123,13 @@ class Infofile:
                     colcount = len(row)
 
                 self._rows.append(row)
-                
+
         fp.close()
-                
+
     def __len__(self): return self._rows.__len__()
     def __getitem__(self, idx): return self._rows.__getitem__(idx)
-    def __reversed__ (self): return self._rows.__reversed__()    
-    def __contains__(self): return self._rows.__contains__()        
+    def __reversed__ (self): return self._rows.__reversed__()
+    def __contains__(self): return self._rows.__contains__()
     def __iter__(self): return self._rows.__iter__()
 
 class DictInfofile:
@@ -151,17 +151,16 @@ class DictInfofile:
         plus = fp.read(1)
         if plus != "+":
             raise IOError("Not a dict info file. (There is no +).")
-            
+
         inif = iter(Infofile(fp))
 
         keys = next(inif)
         self._entries = []
         for tpl in inif:
             self._entries.append(dict(zip(keys, tpl)))
-        
+
     def __len__(self): return self._entries.__len__()
     def __getitem__(self, idx): return self._entries.__getitem__(idx)
-    def __reversed__ (self): return self._entries.__reversed__()    
-    def __contains__(self): return self._entries.__contains__()        
+    def __reversed__ (self): return self._entries.__reversed__()
+    def __contains__(self): return self._entries.__contains__()
     def __iter__(self): return self._entries.__iter__()
-
